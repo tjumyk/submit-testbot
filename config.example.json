@@ -1,0 +1,22 @@
+{
+  "SITE": {
+    "name": "UNSWKG Submit",
+    "root_url": "http://localhost:8888",
+    "base_url": "/",
+    "behind_proxy": false
+  },
+  "AUTO_TEST":{
+    "broker": "amqp://",
+    "broker_use_ssl": {
+      "keyfile": "/var/ssl/private/worker-key.pem",
+      "certfile": "/var/ssl/worker-cert.pem",
+      "ca_certs": "/var/ssl/myca.pem",
+      "cert_reqs": "CERT_REQUIRED"
+    },
+    "backend": "redis://"
+  },
+  "AUTO_TEST_WORKER": {
+    "name": "test_worker",
+    "password": "13246543356754321435"
+  }
+}
