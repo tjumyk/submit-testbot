@@ -21,6 +21,19 @@ site_config = config['SITE']
 celery_config = config['AUTO_TEST']
 worker_config = config.get('AUTO_TEST_WORKER')
 
+# check data folder
+data_folder = config['DATA_FOLDER']
+if not os.path.exists(data_folder):
+    raise RuntimeError('Data folder does not exist')
+# check folder for all work
+works_folder = os.path.join(data_folder, 'test_works')
+if not os.path.exists(works_folder):
+    raise RuntimeError('Folder for all work does not exist')
+# check environment folder
+env_folder = os.path.join(data_folder, 'test_environments')
+if not os.path.exists(env_folder):
+    raise RuntimeError('Test environment folder does not exist')
+
 server_url = site_config['root_url'] + site_config['base_url']
 
 app = celery.Celery('submit', broker=celery_config['broker'], backend=celery_config['backend'])
@@ -210,17 +223,14 @@ def run_test(self: Task, submission_id: int):
     env_id = test_environment['id']
     env_md5 = test_environment['md5']
 
-    # check work folder
-    data_folder = config['DATA_FOLDER']
-    work_folder = os.path.join(data_folder, 'test_works', self.request.id)
+    # check work folder for the current task
+    work_folder = os.path.join(works_folder, self.request.id)
     if os.path.lexists(work_folder):
         raise RuntimeError('Work folder already exists')
 
-    # check cached test environment
-    env_folder = os.path.join(data_folder, 'test_environments')
+    # check cached environment
     env_meta_path = os.path.join(env_folder, '%d.json' % env_id)
     env_zip_path = None
-
     if os.path.isfile(env_meta_path):
         with open(env_meta_path) as f_meta:
             try:
