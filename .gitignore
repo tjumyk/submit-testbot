@@ -2,3 +2,5 @@
 *.iml
 
 __pycache__
+data/
+config.json
