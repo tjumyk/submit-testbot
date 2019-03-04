@@ -26,7 +26,7 @@ server_url = site_config['root_url'] + site_config['base_url']
 app = celery.Celery('submit', broker=celery_config['broker'], backend=celery_config['backend'])
 app.conf.update(
     task_routes={
-        'celery_app.run_test': {'queue': 'auto-test'},
+        'testbot.bot.run_test': {'queue': 'auto-test'},
     },
     task_track_started=True
 )
@@ -197,7 +197,7 @@ class MyTask(celery.Task):
         })
 
 
-@app.task(bind=True, base=MyTask)
+@app.task(bind=True, base=MyTask, name='testbot.bot.run_test')
 def run_test(self: Task, submission_id: int):
     report_started(submission_id, self.request.id, self.request.hostname, os.getpid())
 
