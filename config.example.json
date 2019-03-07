@@ -5,6 +5,7 @@
     "base_url": "/",
     "behind_proxy": false
   },
+  "DATA_FOLDER": "data",
   "AUTO_TEST":{
     "broker": "amqp://",
     "broker_use_ssl": {
