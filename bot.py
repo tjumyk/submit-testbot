@@ -67,8 +67,8 @@ def report_result(submission_id: int, work_id: str, data: dict):
     resp.raise_for_status()
 
 
-def get_submission(submission_id: int, work_id: str):
-    resp = requests.get('%sapi/submissions/%d/worker-get-submission/%s' % (server_url, submission_id, work_id),
+def get_submission_and_config(submission_id: int, work_id: str):
+    resp = requests.get('%sapi/submissions/%d/worker-get-submission-and-config/%s' % (server_url, submission_id, work_id),
                         auth=get_auth_param())
     resp.raise_for_status()
     return resp.json()
@@ -124,33 +124,6 @@ def upload_output_files(submission_id: int, work_id: str, files: dict):
     resp.raise_for_status()
 
 
-def get_run_params(config_file_path: str) -> dict:
-    """
-    Parse a config file and convert the configs into running params. The keys of the config object may be different from
-    the corresponding running params as we simplified them to hide the low-level jargon for easier use.
-    :param config_file_path: a JSON object
-    :return: a dictionary of running params
-    """
-    with open(config_file_path) as f_limits:
-        params = {}
-        for k, v in json.load(f_limits).items():
-            if k == 'auto_remove':
-                params['remove'] = v
-            elif k == 'cpu':
-                period = 100000
-                params['cpu_period'] = period
-                params['cpu_quota'] = int(v * period)
-            elif k == 'memory':
-                params['mem_limit'] = v
-            elif k == 'memory_and_swap':
-                # Notice: this limit requires system kernel support and may cause performance degradation.
-                # See this link: https://docs.docker.com/config/containers/resource_constraints/
-                params['memswap_limit'] = v
-            elif k == 'network':
-                params['network_disabled'] = not v
-        return params
-
-
 def extract_result(raw_output, result_tag):
     """
     Try to parse the last non-empty line from the raw output as the result
@@ -198,13 +171,20 @@ class MyTask(celery.Task):
 
 
 @app.task(bind=True, base=MyTask, name='testbot.bot.run_test')
-def run_test(self: Task, submission_id: int):
+def run_test(self: Task, submission_id: int, config_id: int):
     report_started(submission_id, self.request.id, self.request.hostname, os.getpid())
 
-    # get submission info
-    submission = get_submission(submission_id, self.request.id)
+    # get submission info and test config
+    info = get_submission_and_config(submission_id, self.request.id)
+    submission = info['submission']
+    test_config = info['config']
+    if test_config['id'] != config_id:
+        raise RuntimeError('Config ID mismatch')
+    if not test_config['is_enabled']:
+        raise RuntimeError('Config is disabled')
+
     submission_id = submission['id']
-    test_environment = submission.get('auto_test_environment')
+    test_environment = test_config.get('environment')
     if test_environment is None:
         raise RuntimeError('Test environment not specified')
     env_id = test_environment['id']
@@ -287,9 +267,21 @@ def run_test(self: Task, submission_id: int):
                 'remove': True,  # by default, remove container after exit
                 'environment': env_vars
             }
-            docker_run_config = os.path.join(work_folder, 'docker-run-config.json')
-            if os.path.isfile(docker_run_config):
-                run_params.update(get_run_params(docker_run_config))
+
+            # update docker configs
+            for k, v in test_config.items():
+                if v is None:
+                    continue
+                if k == 'docker_auto_remove':
+                    run_params['remove'] = v
+                elif k == 'docker_cpus':
+                    period = 100000
+                    run_params['cpu_period'] = period
+                    run_params['cpu_quota'] = int(v * period)
+                elif k == 'docker_memory':
+                    run_params['mem_limit'] = '%dm' % v
+                elif k == 'docker_network':
+                    run_params['network_disabled'] = not v
 
             # build Docker image
             build_logs = None
