@@ -5,11 +5,15 @@ from celery import Task
 
 from .api import report_result
 from .configs import celery_config
+from .exec_env_test_docker import DockerEnvironmentTestExecutor
+from .exec_env_test_script import ScriptEnvironmentTestExecutor
 
 app = celery.Celery('submit', broker=celery_config['broker'], backend=celery_config['backend'])
 app.conf.update(
     task_routes={
-        'testbot.bot.run_test': {'queue': 'auto-test'},
+        'testbot.bot.run_env_test_script': {'queue': 'testbot_env_test_script'},
+        'testbot.bot.run_env_test_docker': {'queue': 'testbot_env_test_docker'},
+        'testbot.bot.run_anti_plagiarism': {'queue': 'testbot_anti_plagiarism'},
     },
     task_track_started=True
 )
@@ -40,9 +44,14 @@ class MyTask(celery.Task):
         })
 
 
-@app.task(bind=True, base=MyTask, name='testbot.bot.run_test')
-def run_test(self: Task, submission_id: int, config_id: int):
-    pass
+@app.task(bind=True, base=MyTask, name='testbot.bot.run_env_test_script')
+def run_env_test_script(self: Task, submission_id: int, test_config_id: int):
+    return ScriptEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id)
+
+
+@app.task(bind=True, base=MyTask, name='testbot.bot.run_env_test_docker')
+def run_env_test_docker(self: Task, submission_id: int, test_config_id: int):
+    return DockerEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id)
 
 
 @app.task(bind=True, base=MyTask, name='testbot.bot.run_anti_plagiarism')
