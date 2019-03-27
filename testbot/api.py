@@ -3,8 +3,8 @@ import tempfile
 
 import requests
 
-from .configs import worker_config, server_url
-from .util import md5sum
+from testbot.configs import worker_config, server_url
+from testbot.util import md5sum
 
 
 class APIError(Exception):

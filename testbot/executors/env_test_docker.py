@@ -5,8 +5,8 @@ import docker
 from celery import Task
 from docker.errors import ContainerError, BuildError
 
-from .exec_env_test import EnvironmentTestExecutor
-from .exec_generic import ExecutorError
+from testbot.executors.env_test import EnvironmentTestExecutor
+from testbot.executors.errors import ExecutorError
 
 
 class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):

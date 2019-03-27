@@ -3,10 +3,10 @@ import ssl
 import celery
 from celery import Task
 
-from .api import report_result
-from .configs import celery_config
-from .exec_env_test_docker import DockerEnvironmentTestExecutor
-from .exec_env_test_script import ScriptEnvironmentTestExecutor
+from testbot.api import report_result
+from testbot.configs import celery_config
+from testbot.executors.env_test_docker import DockerEnvironmentTestExecutor
+from testbot.executors.env_test_script import ScriptEnvironmentTestExecutor
 
 app = celery.Celery('submit', broker=celery_config['broker'], backend=celery_config['backend'])
 app.conf.update(

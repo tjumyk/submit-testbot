@@ -2,12 +2,9 @@ import os
 
 from celery import Task
 
-from .api import report_started, get_submission_and_config, upload_output_files
-from .configs import data_folder
-
-
-class ExecutorError(Exception):
-    pass
+from testbot.api import report_started, get_submission_and_config, upload_output_files
+from testbot.configs import data_folder
+from testbot.executors.errors import ExecutorError
 
 
 class GenericExecutor:

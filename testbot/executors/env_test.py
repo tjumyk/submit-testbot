@@ -5,9 +5,10 @@ import shutil
 
 from celery import Task
 
-from .api import download_material, download_submission_file
-from .configs import data_folder
-from .exec_generic import GenericExecutor, ExecutorError
+from testbot.api import download_material, download_submission_file
+from testbot.configs import data_folder
+from testbot.executors.errors import ExecutorError
+from testbot.executors.generic import GenericExecutor
 
 
 class EnvironmentTestExecutor(GenericExecutor):
