@@ -25,7 +25,7 @@ class ScriptEnvironmentTestExecutor(EnvironmentTestExecutor):
         # time/resource/network restrictions.
         run_script = os.path.join(self.work_folder, 'run.sh')
         if not os.path.isfile(run_script):
-            raise ExecutorError('Test script not found')
+            raise ExecutorError('Test script "run.sh" not found')
         self.run_script = run_script
 
         # make a copy of the current environment and add additional env vars
