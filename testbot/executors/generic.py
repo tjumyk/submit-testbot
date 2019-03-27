@@ -57,8 +57,8 @@ class GenericExecutor:
             upload_output_files(self.submission_id, self.task.request.id, self.files_to_upload)
 
     def start(self):
-        self.prepare()
         try:
+            self.prepare()
             return self.run()
         finally:
             self.clean_up()
