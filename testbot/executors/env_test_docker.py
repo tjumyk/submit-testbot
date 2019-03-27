@@ -11,7 +11,7 @@ from testbot.executors.errors import ExecutorError
 
 
 class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
-    _DOCKER_CLIENT: DockerClient = None
+    _DOCKER_CLIENT = None
 
     def __init__(self, task: Task, submission_id: int, test_config_id: int):
         super(DockerEnvironmentTestExecutor, self).__init__(task=task, submission_id=submission_id,
