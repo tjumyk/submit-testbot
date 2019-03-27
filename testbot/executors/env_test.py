@@ -3,18 +3,17 @@ import os
 import random
 import shutil
 
-from celery import Task
-
 from testbot.api import download_material, download_submission_file
 from testbot.configs import data_folder
 from testbot.executors.errors import ExecutorError
 from testbot.executors.generic import GenericExecutor
+from testbot.task import BotTask
 
 
 class EnvironmentTestExecutor(GenericExecutor):
     EXIT_STATUS_TIMEOUT = 124
 
-    def __init__(self, task: Task, submission_id: int, test_config_id: int):
+    def __init__(self, task: BotTask, submission_id: int, test_config_id: int):
         super().__init__(task=task, submission_id=submission_id, test_config_id=test_config_id)
         self.environment = None
         self.result_tag = None

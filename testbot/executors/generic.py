@@ -1,14 +1,13 @@
 import os
 
-from celery import Task
-
 from testbot.api import report_started, get_submission_and_config, upload_output_files
 from testbot.configs import data_folder
 from testbot.executors.errors import ExecutorError
+from testbot.task import BotTask
 
 
 class GenericExecutor:
-    def __init__(self, task: Task, submission_id: int, test_config_id: int):
+    def __init__(self, task: BotTask, submission_id: int, test_config_id: int):
         self.task = task
         self.submission_id = submission_id
         self.test_config_id = test_config_id

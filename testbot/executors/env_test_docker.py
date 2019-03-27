@@ -2,17 +2,17 @@ import json
 import os
 
 import docker
-from celery import Task
 from docker.errors import ContainerError, BuildError
 
 from testbot.executors.env_test import EnvironmentTestExecutor
 from testbot.executors.errors import ExecutorError
+from testbot.task import BotTask
 
 
 class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
     _DOCKER_CLIENT = None
 
-    def __init__(self, task: Task, submission_id: int, test_config_id: int):
+    def __init__(self, task: BotTask, submission_id: int, test_config_id: int):
         super(DockerEnvironmentTestExecutor, self).__init__(task=task, submission_id=submission_id,
                                                             test_config_id=test_config_id)
         self.docker_client = None
