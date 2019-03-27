@@ -21,6 +21,6 @@
     "password": "13246543356754321435"
   },
   "ANTI_PLAGIARISM": {
-    "api": "http://localhost:8644"
+    "api": "http://localhost:6322"
   }
 }
