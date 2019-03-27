@@ -1,12 +1,11 @@
 import ssl
 
 import celery
-from celery import Task
 
-from testbot.api import report_result
 from testbot.configs import celery_config
 from testbot.executors.env_test_docker import DockerEnvironmentTestExecutor
 from testbot.executors.env_test_script import ScriptEnvironmentTestExecutor
+from testbot.task import BotTask
 
 app = celery.Celery('submit', broker=celery_config['broker'], backend=celery_config['backend'])
 app.conf.update(
@@ -25,37 +24,18 @@ if broker_ssl_config:
     app.conf.update(broker_use_ssl=broker_ssl_config)
 
 
-# noinspection PyAbstractClass
-class MyTask(celery.Task):
-    def on_success(self, result, work_id, args, kwargs):
-        submission_id = args[0]
-        report_result(submission_id, work_id, {
-            'final_state': 'SUCCESS',
-            'result': result
-        })
-
-    def on_failure(self, exc, work_id, args, kwargs, exc_info):
-        submission_id = args[0]
-        report_result(submission_id, work_id, {
-            'final_state': 'FAILURE',
-            'exception_class': type(exc).__name__,
-            'exception_message': str(exc),
-            'exception_traceback': exc_info.traceback
-        })
-
-
-@app.task(bind=True, base=MyTask, name='testbot.bot.run_env_test_script')
-def run_env_test_script(self: Task, submission_id: int, test_config_id: int):
+@app.task(bind=True, base=BotTask, name='testbot.bot.run_env_test_script')
+def run_env_test_script(self: BotTask, submission_id: int, test_config_id: int):
     return ScriptEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id).start()
 
 
-@app.task(bind=True, base=MyTask, name='testbot.bot.run_env_test_docker')
-def run_env_test_docker(self: Task, submission_id: int, test_config_id: int):
+@app.task(bind=True, base=BotTask, name='testbot.bot.run_env_test_docker')
+def run_env_test_docker(self: BotTask, submission_id: int, test_config_id: int):
     return DockerEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id).start()
 
 
-@app.task(bind=True, base=MyTask, name='testbot.bot.run_anti_plagiarism')
-def run_anti_plagiarism(self: Task, submission_id: int, config_id: int):
+@app.task(bind=True, base=BotTask, name='testbot.bot.run_anti_plagiarism')
+def run_anti_plagiarism(self: BotTask, submission_id: int, config_id: int):
     pass
 
 
