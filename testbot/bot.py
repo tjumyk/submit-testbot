@@ -5,13 +5,15 @@ import celery
 from testbot.configs import celery_config
 from testbot.executors.env_test_docker import DockerEnvironmentTestExecutor
 from testbot.executors.env_test_script import ScriptEnvironmentTestExecutor
+from testbot.executors.anti_plagiarism import AntiPlagiarismExecutor
 from testbot.task import BotTask
 
 app = celery.Celery('submit', broker=celery_config['broker'], backend=celery_config['backend'])
 app.conf.update(
     task_routes={
         'testbot.bot.run_env_test_script': {'queue': 'testbot_env_test_script'},
-        'testbot.bot.run_env_test_docker': {'queue': 'testbot_env_test_docker'}
+        'testbot.bot.run_env_test_docker': {'queue': 'testbot_env_test_docker'},
+        'testbot.bot.run_anti_plagiarism': {'queue': 'testbot_anti_plagiarism'}
     },
     task_track_started=True
 )
@@ -32,6 +34,10 @@ def run_env_test_script(self: BotTask, submission_id: int, test_config_id: int):
 def run_env_test_docker(self: BotTask, submission_id: int, test_config_id: int):
     return DockerEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id).start()
 
+
+@app.task(bind=True, base=BotTask, name='testbot.bot.run_anti_plagiarism')
+def run_anti_plagiarism(self: BotTask, submission_id: int, test_config_id: int):
+    return AntiPlagiarismExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id).start()
 
 # helper utilities for master server
 task_entries = {
