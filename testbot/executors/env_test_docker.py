@@ -3,6 +3,7 @@ import os
 
 import docker
 from celery import Task
+from docker import DockerClient
 from docker.errors import ContainerError, BuildError
 
 from testbot.executors.env_test import EnvironmentTestExecutor
@@ -10,10 +11,12 @@ from testbot.executors.errors import ExecutorError
 
 
 class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
+    _DOCKER_CLIENT: DockerClient = None
+
     def __init__(self, task: Task, submission_id: int, test_config_id: int):
         super(DockerEnvironmentTestExecutor, self).__init__(task=task, submission_id=submission_id,
                                                             test_config_id=test_config_id)
-        self.docker_client = docker.from_env()
+        self.docker_client = None
         self.run_params = {}
 
     def prepare(self):
@@ -22,6 +25,11 @@ class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
         config_type = self.test_config['type']
         if config_type != 'docker':
             raise ExecutorError('invalid config type for %s: %s' % (self.__class__.__name__, config_type))
+
+        # Get Docker client
+        if self._DOCKER_CLIENT is None:
+            self._DOCKER_CLIENT = docker.from_env()  # lazy-load a global Docker client
+        self.docker_client = self._DOCKER_CLIENT  # reuse the client
 
         # 'Dockerfile' is required
         dockerfile = os.path.join(self.work_folder, 'Dockerfile')
