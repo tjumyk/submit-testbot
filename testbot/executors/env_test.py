@@ -26,6 +26,7 @@ class EnvironmentTestExecutor(GenericExecutor):
         test_environment = self.test_config.get('environment')
         if test_environment is None:
             raise ExecutorError('Test environment not specified')
+        self.environment = test_environment
 
         # check environment folder
         env_folder = os.path.join(data_folder, 'test_environments')
