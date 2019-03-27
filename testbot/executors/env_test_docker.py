@@ -3,7 +3,6 @@ import os
 
 import docker
 from celery import Task
-from docker import DockerClient
 from docker.errors import ContainerError, BuildError
 
 from testbot.executors.env_test import EnvironmentTestExecutor
