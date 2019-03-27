@@ -46,12 +46,12 @@ class MyTask(celery.Task):
 
 @app.task(bind=True, base=MyTask, name='testbot.bot.run_env_test_script')
 def run_env_test_script(self: Task, submission_id: int, test_config_id: int):
-    return ScriptEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id)
+    return ScriptEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id).start()
 
 
 @app.task(bind=True, base=MyTask, name='testbot.bot.run_env_test_docker')
 def run_env_test_docker(self: Task, submission_id: int, test_config_id: int):
-    return DockerEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id)
+    return DockerEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id).start()
 
 
 @app.task(bind=True, base=MyTask, name='testbot.bot.run_anti_plagiarism')
