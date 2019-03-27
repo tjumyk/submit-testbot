@@ -50,6 +50,7 @@ class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
                 run_params['mem_limit'] = '%dm' % v
             elif k == 'docker_network':
                 run_params['network_disabled'] = not v
+        self.run_params = run_params
 
     def run(self):
         super(DockerEnvironmentTestExecutor, self).run()
