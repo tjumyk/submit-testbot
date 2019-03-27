@@ -11,8 +11,7 @@ app = celery.Celery('submit', broker=celery_config['broker'], backend=celery_con
 app.conf.update(
     task_routes={
         'testbot.bot.run_env_test_script': {'queue': 'testbot_env_test_script'},
-        'testbot.bot.run_env_test_docker': {'queue': 'testbot_env_test_docker'},
-        'testbot.bot.run_anti_plagiarism': {'queue': 'testbot_anti_plagiarism'},
+        'testbot.bot.run_env_test_docker': {'queue': 'testbot_env_test_docker'}
     },
     task_track_started=True
 )
@@ -34,14 +33,8 @@ def run_env_test_docker(self: BotTask, submission_id: int, test_config_id: int):
     return DockerEnvironmentTestExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id).start()
 
 
-@app.task(bind=True, base=BotTask, name='testbot.bot.run_anti_plagiarism')
-def run_anti_plagiarism(self: BotTask, submission_id: int, config_id: int):
-    pass
-
-
 # helper utilities for master server
 task_entries = {
     'run-script': run_env_test_script,
-    'docker': run_env_test_docker,
-    'anti-plagiarism': run_anti_plagiarism
+    'docker': run_env_test_docker
 }
