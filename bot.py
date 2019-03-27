@@ -57,3 +57,11 @@ def run_env_test_docker(self: Task, submission_id: int, test_config_id: int):
 @app.task(bind=True, base=MyTask, name='testbot.bot.run_anti_plagiarism')
 def run_anti_plagiarism(self: Task, submission_id: int, config_id: int):
     pass
+
+
+# helper utilities for master server
+task_entries = {
+    'run-script': run_env_test_script,
+    'docker': run_env_test_docker,
+    'anti-plagiarism': run_anti_plagiarism
+}
