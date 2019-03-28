@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 from testbot.configs import config
@@ -30,7 +32,21 @@ class AntiPlagiarismExecutor(GenericExecutor):
     def run(self):
         super().run()
 
-        # use rid=4 for testing now as the main server has not added target rid in AutoTestConfig
-        resp = requests.get('%s/api/check' % self.api, params=dict(rid=4, sid=self.submission_id))
+        # use rid=12 for testing now as the main server has not added target rid in AutoTestConfig
+        resp = requests.get('%s/api/check' % self.api, params=dict(rid=12, sid=self.submission_id))
         resp.raise_for_status()
-        return resp.text
+        result = resp.text.split('\n', 1)
+
+        if len(result) > 1:
+            summary, report = result
+        else:  # only one line or nothing
+            summary = result
+            report = None
+        try:
+            summary = json.loads(summary)
+        except (TypeError, ValueError):
+            pass
+
+        if report:
+            self.files_to_upload['report.txt'] = report
+        return summary
