@@ -3,9 +3,9 @@ import ssl
 import celery
 
 from testbot.configs import celery_config
+from testbot.executors.anti_plagiarism import AntiPlagiarismExecutor
 from testbot.executors.env_test_docker import DockerEnvironmentTestExecutor
 from testbot.executors.env_test_script import ScriptEnvironmentTestExecutor
-from testbot.executors.anti_plagiarism import AntiPlagiarismExecutor
 from testbot.task import BotTask
 
 app = celery.Celery('submit', broker=celery_config['broker'], backend=celery_config['backend'])
@@ -39,8 +39,10 @@ def run_env_test_docker(self: BotTask, submission_id: int, test_config_id: int):
 def run_anti_plagiarism(self: BotTask, submission_id: int, test_config_id: int):
     return AntiPlagiarismExecutor(task=self, submission_id=submission_id, test_config_id=test_config_id).start()
 
+
 # helper utilities for master server
 task_entries = {
     'run-script': run_env_test_script,
-    'docker': run_env_test_docker
+    'docker': run_env_test_docker,
+    'anti-plagiarism': run_anti_plagiarism
 }
