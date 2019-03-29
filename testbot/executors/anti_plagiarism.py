@@ -14,6 +14,7 @@ class AntiPlagiarismExecutor(GenericExecutor):
 
         self.api = None
         self.file_requirement_id = None
+        self.template_file_id = None
 
     def prepare(self):
         super().prepare()
@@ -34,12 +35,15 @@ class AntiPlagiarismExecutor(GenericExecutor):
         if rid is None:
             raise ExecutorError('target file requirement id is not specified')
         self.file_requirement_id = rid
+        self.template_file_id = self.test_config.get('template_file_id')
 
     def run(self):
         super().run()
 
-        resp = requests.get('%s/api/check' % self.api, params=dict(rid=self.file_requirement_id,
-                                                                   sid=self.submission_id))
+        params = dict(rid=self.file_requirement_id, sid=self.submission_id)
+        if self.template_file_id is not None:
+            params['tid'] = self.template_file_id
+        resp = requests.get('%s/api/check' % self.api, params=params)
         resp.raise_for_status()
         result = resp.text.split('\n', 1)
 
