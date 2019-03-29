@@ -57,8 +57,9 @@ class AntiPlagiarismExecutor(GenericExecutor):
             self.files_to_upload['summary.json'] = summary
 
             # post-process summary to make summary smaller
-            if 'collided_files' in summary_dict:
-                del summary_dict['collided_files']
+            summary_dict.pop('collided_users', None)
+            summary_dict.pop('collided_teams', None)
+            summary_dict.pop('collided_files', None)
             summary = summary_dict
         except (TypeError, ValueError):
             self.files_to_upload['summary.txt'] = summary
