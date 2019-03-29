@@ -13,6 +13,7 @@ class AntiPlagiarismExecutor(GenericExecutor):
         super().__init__(task=task, submission_id=submission_id, test_config_id=test_config_id)
 
         self.api = None
+        self.file_requirement_id = None
 
     def prepare(self):
         super().prepare()
@@ -29,11 +30,16 @@ class AntiPlagiarismExecutor(GenericExecutor):
             raise ExecutorError('api address for anti-plagiarism not found')
         self.api = api
 
+        rid = self.test_config.get('file_requirement_id')
+        if rid is None:
+            raise ExecutorError('target file requirement id is not specified')
+        self.file_requirement_id = rid
+
     def run(self):
         super().run()
 
-        # use rid=12 for testing now as the main server has not added target rid in AutoTestConfig
-        resp = requests.get('%s/api/check' % self.api, params=dict(rid=12, sid=self.submission_id))
+        resp = requests.get('%s/api/check' % self.api, params=dict(rid=self.file_requirement_id,
+                                                                   sid=self.submission_id))
         resp.raise_for_status()
         result = resp.text.split('\n', 1)
 
