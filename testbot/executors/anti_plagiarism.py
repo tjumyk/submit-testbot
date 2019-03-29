@@ -53,10 +53,15 @@ class AntiPlagiarismExecutor(GenericExecutor):
             summary = result
             report = None
         try:
-            summary = json.loads(summary)
-        except (TypeError, ValueError):
-            pass
+            summary_dict = json.loads(summary)
+            self.files_to_upload['summary.json'] = summary
 
+            # post-process summary to make summary smaller
+            if 'collided_files' in summary_dict:
+                del summary_dict['collided_files']
+            summary = summary_dict
+        except (TypeError, ValueError):
+            self.files_to_upload['summary.txt'] = summary
         if report:
             self.files_to_upload['report.txt'] = report
         return summary
