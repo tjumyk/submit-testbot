@@ -52,17 +52,19 @@ class AntiPlagiarismExecutor(GenericExecutor):
         else:  # only one line or nothing
             summary = result
             report = None
-        try:
-            summary_dict = json.loads(summary)
-            self.files_to_upload['summary.json'] = summary
 
-            # post-process summary to make summary smaller
-            summary_dict.pop('collided_users', None)
-            summary_dict.pop('collided_teams', None)
-            summary_dict.pop('collided_files', None)
-            summary = summary_dict
-        except (TypeError, ValueError):
-            self.files_to_upload['summary.txt'] = summary
+        if summary:
+            try:
+                summary_dict = json.loads(summary)
+                self.files_to_upload['summary.json'] = summary
+
+                # post-process summary to make summary smaller
+                summary_dict.pop('collided_users', None)
+                summary_dict.pop('collided_teams', None)
+                summary_dict.pop('collided_files', None)
+                summary = summary_dict
+            except (TypeError, ValueError):
+                self.files_to_upload['summary.txt'] = summary
         if report:
             self.files_to_upload['report.txt'] = report
         return summary
