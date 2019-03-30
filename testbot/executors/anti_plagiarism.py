@@ -50,7 +50,7 @@ class AntiPlagiarismExecutor(GenericExecutor):
         if len(result) > 1:
             summary, report = result
         else:  # only one line or nothing
-            summary = result
+            summary = result[0]
             report = None
 
         if summary:
