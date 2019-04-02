@@ -42,8 +42,12 @@ class ScriptEnvironmentTestExecutor(EnvironmentTestExecutor):
         if proc_result.stderr:
             self.files_to_upload['stderr.txt'] = proc_result.stderr
 
-        if proc_result.returncode:
-            if proc_result.returncode == self.EXIT_STATUS_TIMEOUT:
+        return_code = proc_result.returncode
+        if return_code:
+            if return_code == self.EXIT_STATUS_TIMEOUT:
                 raise TimeoutError('Test script timeout')
-            raise ExecutorError('Test script returned non-zero exit status %d' % proc_result.returncode)
-        return self.extract_result(proc_result.stdout, self.result_tag)
+            errors = self.extract_errors(proc_result.stderr)
+            if errors:
+                raise RuntimeError(' \n'.join(errors))
+            raise RuntimeError('Test returned exit code %d' % return_code)
+        return self.extract_result(proc_result.stdout)

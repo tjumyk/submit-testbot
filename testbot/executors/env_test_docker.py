@@ -80,13 +80,16 @@ class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
             logs = self.docker_client.containers.run(image.id, name=tag, stdout=True, stderr=True, **self.run_params)
             if logs:
                 self.files_to_upload['docker-run-logs.txt'] = logs
-            result = self.extract_result(logs, self.result_tag)
+            result = self.extract_result(logs)
         except ContainerError as e:
             if e.stderr:
                 self.files_to_upload['docker-run-error.txt'] = e.stderr  # the error does not provide stdout
             if e.exit_status == self.EXIT_STATUS_TIMEOUT:
                 raise TimeoutError('Test command timeout')
-            raise ExecutorError('Test command returned non-zero exit status %d' % e.exit_status)
+            errors = self.extract_errors(e.stderr)
+            if errors:
+                raise RuntimeError(' \n'.join(errors))
+            raise RuntimeError('Test returned exit code %d' % e.exit_status)
 
         if self.run_params.get('remove'):
             # If container should be removed, also try to remove the image

@@ -17,6 +17,7 @@ class EnvironmentTestExecutor(GenericExecutor):
         super().__init__(task=task, submission_id=submission_id, test_config_id=test_config_id)
         self.environment = None
         self.result_tag = None
+        self.error_tag = None
         self.env_vars = {}
 
     def prepare(self):
@@ -45,9 +46,14 @@ class EnvironmentTestExecutor(GenericExecutor):
             download_submission_file(self.submission_id, self.task.request.id, file, local_save_path)
 
         # generate randomized result tag
-        self.result_tag = '##RESULT%d##' % random.randint(100000, 999999)
+        rand_int = random.randint(100000, 999999)
+        self.result_tag = '##RESULT%d##' % rand_int
+        self.error_tag = '##ERROR%d##' % rand_int
         # generate additional environment variables
-        self.env_vars = {'RESULT_TAG': self.result_tag}
+        self.env_vars = {
+            'RESULT_TAG': self.result_tag,
+            'ERROR_TAG': self.error_tag
+        }
 
     @staticmethod
     def _prepare_env_zip(env_folder: str, test_environment: dict) -> str:
@@ -86,15 +92,14 @@ class EnvironmentTestExecutor(GenericExecutor):
                 pass
         return env_zip_path
 
-    @staticmethod
-    def extract_result(raw_output, result_tag):
+    def extract_result(self, raw_output):
         """
         Try to parse the last line that starts with the `result_tag` from the raw output as the result
         :param raw_output: raw output from the test script or command inside Docker
         :param result_tag: tag for the result line
         :return: result if parsed successfully
         """
-        if not raw_output or not result_tag:
+        if not raw_output or not self.result_tag:
             return None
         if isinstance(raw_output, (bytes, bytearray)):
             raw_output = raw_output.decode()
@@ -103,8 +108,8 @@ class EnvironmentTestExecutor(GenericExecutor):
         result = None
         for line in lines:
             line = line.strip()
-            if line and line.startswith(result_tag):
-                result = line[len(result_tag):].strip()
+            if line and line.startswith(self.result_tag):
+                result = line[len(self.result_tag):].strip()
 
         if result is None:
             return None
@@ -112,3 +117,24 @@ class EnvironmentTestExecutor(GenericExecutor):
             return json.loads(result)
         except (ValueError, TypeError):
             return result
+
+    def extract_errors(self, raw_output):
+        """
+        Try to extract all the lines that starts with the `error_tag` from the raw output as the errors
+        :param raw_output: raw output from the test script or command inside Docker
+        :param error_tag: tag for the error line
+        :return: result if extracted successfully
+        """
+        if not raw_output or not self.error_tag:
+            return None
+        if isinstance(raw_output, (bytes, bytearray)):
+            raw_output = raw_output.decode()
+        lines = raw_output.strip().split('\n')
+
+        errors = []
+        for line in lines:
+            line = line.strip()
+            if line and line.startswith(self.error_tag):
+                errors.append(line[len(self.error_tag):].strip())
+
+        return errors
