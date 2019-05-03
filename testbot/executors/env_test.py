@@ -12,6 +12,7 @@ from testbot.task import BotTask
 
 class EnvironmentTestExecutor(GenericExecutor):
     EXIT_STATUS_TIMEOUT = 124
+    EXIT_STATUS_KILLED = 137
 
     def __init__(self, task: BotTask, submission_id: int, test_config_id: int):
         super().__init__(task=task, submission_id=submission_id, test_config_id=test_config_id)

@@ -85,7 +85,9 @@ class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
             if e.stderr:
                 self.files_to_upload['docker-run-error.txt'] = e.stderr  # the error does not provide stdout
             if e.exit_status == self.EXIT_STATUS_TIMEOUT:
-                raise TimeoutError('Test command timeout')
+                raise TimeoutError('Test timeout')
+            if e.exit_status == self.EXIT_STATUS_KILLED:
+                raise OSError('Test killed')
             errors = self.extract_errors(e.stderr)
             if errors:
                 raise RuntimeError(' \n'.join(errors))

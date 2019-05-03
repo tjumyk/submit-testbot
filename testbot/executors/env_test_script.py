@@ -45,7 +45,9 @@ class ScriptEnvironmentTestExecutor(EnvironmentTestExecutor):
         return_code = proc_result.returncode
         if return_code:
             if return_code == self.EXIT_STATUS_TIMEOUT:
-                raise TimeoutError('Test script timeout')
+                raise TimeoutError('Test timeout')
+            if return_code == self.EXIT_STATUS_KILLED:
+                raise OSError('Test killed')
             errors = self.extract_errors(proc_result.stderr)
             if errors:
                 raise RuntimeError(' \n'.join(errors))
