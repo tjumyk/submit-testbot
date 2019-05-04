@@ -50,11 +50,17 @@ class EnvironmentTestExecutor(GenericExecutor):
         rand_int = random.randint(100000, 999999)
         self.result_tag = '##RESULT%d##' % rand_int
         self.error_tag = '##ERROR%d##' % rand_int
-        # generate additional environment variables
+
+        # generate environment variables
         self.env_vars = {
+            'SUBMISSION_ID': str(self.submission_id),
+            'SUBMITTER_ID': str(self.submission['submitter_id']),
             'RESULT_TAG': self.result_tag,
             'ERROR_TAG': self.error_tag
         }
+        team_id = self.submission.get('submitter_team_id')
+        if team_id is not None:
+            self.env_vars['SUBMITTER_TEAM_ID'] = str(team_id)
 
     @staticmethod
     def _prepare_env_zip(env_folder: str, test_environment: dict) -> str:
