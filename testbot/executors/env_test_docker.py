@@ -11,6 +11,7 @@ from testbot.task import BotTask
 
 class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
     _DOCKER_CLIENT = None
+    _LOG_LENGTH_LIMIT = 10 * 1024 * 1024  # 10MB
 
     def __init__(self, task: BotTask, submission_id: int, test_config_id: int):
         super(DockerEnvironmentTestExecutor, self).__init__(task=task, submission_id=submission_id,
@@ -79,6 +80,9 @@ class DockerEnvironmentTestExecutor(EnvironmentTestExecutor):
             # logs from stdout and stderr are combined due to the design of the API
             logs = self.docker_client.containers.run(image.id, name=tag, stdout=True, stderr=True, **self.run_params)
             if logs:
+                if len(logs) > self._LOG_LENGTH_LIMIT:
+                    self.files_to_upload['docker-run-logs.truncated.txt'] = logs[:self._LOG_LENGTH_LIMIT]
+                    raise RuntimeError('Output limit exceeded')
                 self.files_to_upload['docker-run-logs.txt'] = logs
             result = self.extract_result(logs)
         except ContainerError as e:
