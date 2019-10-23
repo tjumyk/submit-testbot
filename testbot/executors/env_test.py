@@ -47,7 +47,7 @@ class EnvironmentTestExecutor(GenericExecutor):
             download_submission_file(self.submission_id, self.task.request.id, file, local_save_path)
 
         # generate randomized result tag
-        rand_int = random.randint(100000, 999999)
+        rand_int = random.randint(10000000, 99999999)
         self.result_tag = '##RESULT%d##' % rand_int
         self.error_tag = '##ERROR%d##' % rand_int
 
