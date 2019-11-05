@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import sys
+import traceback
 from importlib import import_module
 from typing import Dict
 
@@ -182,6 +183,10 @@ class TestSuite:
                 print_error_message('Failed to load module')
                 raise
 
+        # Extract the absolute file paths of the imported modules for traceback.
+        # m.__file__ is probably already an absolute path, but we use abspath() to ensure that it is absolute.
+        loaded_module_file_paths = {os.path.abspath(m.__file__) for m in self._loaded_modules.values()}
+
         # run tests
         total = 0
         results = {}
@@ -219,12 +224,29 @@ class TestSuite:
                 try:
                     result = unit.run(methods)
                     if result is None:
-                        result = 'No Answer'  # make it explicit
+                        result = 'No Result'  # make it explicit
                     logger.info('Test unit %s finished: %s', unit.name, result)
                 except Exception:
-                    # DO NOT provide ANY error messages here as we have provided the testing data to the target methods
-                    # and the students can deliberately throw an Exception with confidential data.
-                    result = 'Exception Occurred'
+                    # Try to get the file path and the line number in the loaded modules where the last exception
+                    # occurred. The context exception or cause exception is ignored.
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    file_path, line_no = None, None
+                    for frame in reversed(traceback.extract_tb(exc_traceback)):  # most recent last
+                        _file_path = os.path.abspath(frame.filename)  # make sure absolute
+                        if _file_path in loaded_module_file_paths:
+                            file_path = _file_path
+                            line_no = frame.lineno
+                            break
+                    # DO NOT provide ANY error messages except the positional info (if found) here as we have provided
+                    # the testing data to the target methods and the students can deliberately throw an Exception with
+                    # confidential data.
+                    if file_path is not None:
+                        if len(self._loaded_modules) > 1:
+                            result = 'Exception in %s (Line %s)' % (os.path.basename(file_path), line_no)
+                        else:  # omit file path if only one module loaded
+                            result = 'Exception at Line %s' % line_no
+                    else:
+                        result = 'Exception Occurred'
                     # The details of the exception are printed to the stderr but not reported (only appear in stderr.txt
                     # output file).
                     logger.exception('Exception occurred in test unit %s', unit.name)
