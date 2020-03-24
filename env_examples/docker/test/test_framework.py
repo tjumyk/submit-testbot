@@ -162,6 +162,8 @@ class TestSuite:
         """
         # load required modules
         for alias, module_path in self._require_modules.items():
+            # Guess the absolute path of the target module, it might be wrong.
+            module_abs_path = os.path.abspath(os.path.join(*module_path.split('.')) + '.py')
             try:
                 self._loaded_modules[alias] = import_module(module_path)
                 # It is relatively safe to report some error messages of some known types here as we have not provided
@@ -177,10 +179,33 @@ class TestSuite:
                 print_error_message('ImportError: %s' % e.name)
                 raise
             except SyntaxError as e:
-                print_error_message('SyntaxError: line %d offset %d' % (e.lineno, e.offset))
+                if os.path.abspath(e.filename) != module_abs_path or len(self._require_modules) > 1:
+                    print_error_message('SyntaxError: %s (line %d offset %d)' % (os.path.basename(e.filename),
+                                                                                 e.lineno, e.offset))
+                else:
+                    print_error_message('SyntaxError: line %d offset %d' % (e.lineno, e.offset))
                 raise
             except Exception:
-                print_error_message('Failed to load module')
+                # Try to get the line number in the target module where the last exception occurred.
+                # The context exception or cause exception is ignored.
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                file_path, line_no = None, None
+                for frame in reversed(traceback.extract_tb(exc_traceback)):  # most recent last
+                    _file_path = os.path.abspath(frame.filename)  # make sure absolute
+                    if _file_path == module_abs_path:
+                        file_path = _file_path
+                        line_no = frame.lineno
+                        break
+                if file_path is not None:
+                    if len(self._require_modules) > 1:
+                        print_error_message('Failed to import %s: Line %s' % (module_path, line_no))
+                    else:
+                        print_error_message('Failed to import: Line %s' % line_no)
+                else:
+                    if len(self._require_modules) > 1:
+                        print_error_message('Failed to import %s' % module_path)
+                    else:
+                        print_error_message('Failed to import')
                 raise
 
         # Extract the absolute file paths of the imported modules for traceback.
