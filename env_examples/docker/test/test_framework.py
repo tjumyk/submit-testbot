@@ -6,7 +6,7 @@ import re
 import sys
 import traceback
 from importlib import import_module
-from typing import Dict
+from typing import Dict, Optional
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class TestSuite:
     MODULE_ALIAS_FORMAT = re.compile(r'^\w+$')
     MODULE_PATH_FORMAT = re.compile(r'^(\w+\.)*\w+$')
 
-    def __init__(self, require_modules: Dict[str, str] = None, total_path: str = 'Total'):
+    def __init__(self, require_modules: Dict[str, str] = None, total_path: Optional[str] = 'Total'):
         """
         A TestSuite contains a list of TestUnits.
         :param require_modules: Required modules that will be loaded for testing. It must be a dict where each key is an
