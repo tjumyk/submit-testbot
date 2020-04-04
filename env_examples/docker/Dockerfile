@@ -23,14 +23,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 # Install miniconda3
 # Always specify the version explicitly instead of using "Miniconda3-latest-Linux-x86_64.sh".
 # You can replace miniconda with anaconda if you really want those many packages
-RUN wget --quiet -O /usr/local/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh \
+RUN wget --quiet -O /usr/local/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh \
   && bash /usr/local/miniconda.sh -b -p /usr/local/miniconda \
   && rm /usr/local/miniconda.sh
 ENV PATH /usr/local/miniconda/bin:$PATH
 
 # Create python environment if required
-# RUN conda create -y -n test python=3.6
-# ENV PATH /usr/local/miniconda/envs/test/bin:$PATH
+RUN conda create -y -n test python=3.6.5
+ENV PATH /usr/local/miniconda/envs/test/bin:$PATH
 
 # Set the working directory
 WORKDIR /root/test
@@ -48,10 +48,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 'timeout -k TIME_KILL TIME' will send SIGTERM signal to the target command after TIME and send SIGKILL signal to it if
 # it is still running after TIME_KILL since SIGTERM was sent. For more details about the timeout command, please refer
 # to "man timeout".
-ENTRYPOINT ["timeout", "-k", "10s", "1h"]
+ENTRYPOINT ["timeout", "-k", "10s", "1m"]
 
 # Test script command
 CMD ["python", "test.py"]
 
 # Copy submission at the last step to reuse the build cache for all the previous steps
-COPY test/submission /root/test/submission
+COPY ./submission /root/test/submission
