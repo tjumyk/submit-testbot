@@ -5,16 +5,27 @@ import json
 import logging
 import os
 import re
-import sys
+import signal
 import traceback
+from contextlib import contextmanager
 from importlib import import_module
 from typing import Dict, Optional
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+import sys
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 RESULT_TAG = os.getenv("RESULT_TAG", "<RESULT_TAG>")
 ERROR_TAG = os.getenv("ERROR_TAG", "<ERROR_TAG>")
+
+
+class TestConfigError(Exception):
+    pass
+
+
+class TimeoutException(Exception):
+    pass
 
 
 def print_result(result):
@@ -38,8 +49,38 @@ def dict_set_path(d: dict, path: str, value):
     obj[segments[-1]] = value
 
 
-class TestConfigError(Exception):
-    pass
+@contextmanager
+def time_limit(seconds):
+    """
+    Use signal to stop execution of the enclosed code block after seconds.
+    The mechanism is very fragile as the students can either cancel the alarm or catch the TimeoutException.
+    So, remember to check the actual execution time.
+
+    Example:
+        time_soft_limit = 30  # seconds to get marks
+        time_hard_limit = 60  # seconds to abort execution
+        try:
+            with time_limit(time_hard_limit):
+                time_start = _time()
+                answer = student_func(params)
+                exec_time = _time() - time_start
+        except TimeoutException:
+            return 'Hard time limit reached. Abort execution.'
+        if exec_time > time_soft_limit:
+            return 'Timeout'
+        return check_answer(answer)
+    """
+
+    def signal_handler(signum, frame):
+        raise TimeoutException()
+
+    prev_handler = signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)  # cancel alarm
+        signal.signal(signal.SIGALRM, prev_handler)  # reset handler
 
 
 class TestUnit:
