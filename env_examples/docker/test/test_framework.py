@@ -57,18 +57,21 @@ def time_limit(seconds):
     So, remember to check the actual execution time.
 
     Example:
+        from test_framework import time_limit, TimeoutException
+
         time_soft_limit = 30  # seconds to get marks
         time_hard_limit = 60  # seconds to abort execution
+        data = prepare_data()
+        ref_answer = get_ref_answer(data)
+
         try:
             with time_limit(time_hard_limit):
-                time_start = _time()
-                answer = student_func(params)
-                exec_time = _time() - time_start
+                time_start = time()
+                answer = student_func(data)
+                exec_time = time() - time_start
         except TimeoutException:
             return 'Hard time limit reached. Abort execution.'
-        if exec_time > time_soft_limit:
-            return 'Timeout'
-        return check_answer(answer)
+        return check_answer(answer, ref_answer, exec_time, time_soft_limit)
     """
 
     def signal_handler(signum, frame):
