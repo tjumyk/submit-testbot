@@ -25,6 +25,12 @@ if broker_ssl_config:
     if cert_reqs:
         broker_ssl_config['cert_reqs'] = getattr(ssl, cert_reqs)
     app.conf.update(broker_use_ssl=broker_ssl_config)
+redis_ssl_config = celery_config.get('redis_backend_use_ssl')
+if redis_ssl_config:
+    cert_reqs = redis_ssl_config.get('cert_reqs')
+    if cert_reqs:
+        redis_ssl_config['cert_reqs'] = getattr(ssl, cert_reqs)
+    app.conf.update(redis_backend_use_ssl=redis_ssl_config)
 
 
 @app.task(bind=True, base=BotTask, name='testbot.bot.run_env_test_script')
